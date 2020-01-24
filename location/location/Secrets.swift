@@ -7,3 +7,13 @@
 //
 
 import Foundation
+
+struct Secrets {
+    static let url: URL = {
+        let string = "https://magic-box-support.herokuapp.com/background/locations"
+        guard let url = URL(string: string) else {
+            fatalError()
+        }
+        return url
+    }()
+}
