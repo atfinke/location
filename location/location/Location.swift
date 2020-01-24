@@ -15,6 +15,7 @@ struct Location: Codable {
     
     private static let minLocationDiff = 0.0005
     private static let minIntervalDiff = 10.0
+    private static let forceSigDiffIntervalDiff = 60.0 * 60.0 * 6
     
     let timestamp: Double
     let speed: Double
@@ -35,6 +36,10 @@ struct Location: Codable {
         let time = timestamp - location.timestamp
         
         os_log("location diff: %{public}f, %{public}f", log: .filtering, type: .debug, diff, time)
+        if time > Location.forceSigDiffIntervalDiff {
+            return true
+        }
+        
         return diff > Location.minLocationDiff &&
             time > Location.minIntervalDiff
     }
