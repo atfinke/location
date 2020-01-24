@@ -12,6 +12,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     // MARK: - Properties -
     
+    static let activeNotification = Notification.Name("sceneDidBecomeActive")
     static let resignNotification = Notification.Name("sceneWillResignActive")
     var window: UIWindow?
 
@@ -21,8 +22,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let _ = (scene as? UIWindowScene) else { return }
     }
     
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        NotificationCenter.default.post(name: SceneDelegate.activeNotification, object: nil)
+    }
+    
     func sceneWillResignActive(_ scene: UIScene) {
         NotificationCenter.default.post(name: SceneDelegate.resignNotification, object: nil)
     }
+    
 }
 

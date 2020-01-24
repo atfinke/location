@@ -13,36 +13,43 @@ class ViewController: UIViewController {
     // MARK: - Properties -
     
     private let label = UILabel()
+    private var isOpen = false
     
     // MARK: - View Life Cycle -
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         label.textAlignment = .center
-        label.font = UIFont.systemFont(ofSize: 88, weight: .medium)
+        label.numberOfLines = 0
+        label.font = UIFont.systemFont(ofSize: 64, weight: .medium)
         view.addSubview(label)
-        
-        animate()
     }
     
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
+        updateLabel()
         label.frame = view.bounds
     }
     
     // MARK: - Sign of Life -
     
-    func animate() {
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        updateLabel()
         UIView.animate(withDuration: 2.0, animations: {
             self.view.backgroundColor = UIColor(displayP3Red: .random(in: 0..<1),
                                                 green: .random(in: 0..<1),
                                                 blue: .random(in: 0..<1),
                                                 alpha: 1.0)
-        }, completion: { _ in
-            self.label.text = (UserDefaults.standard.array(forKey: "Locations") ?? []).count.description
-            self.animate()
         })
+    }
+    
+    private func updateLabel() {
+        let queueCountKey = "queueCount"
+        let totalCountKey = "totalCount"
+        let queueCount = UserDefaults.standard.integer(forKey: queueCountKey)
+        let totalCount = UserDefaults.standard.integer(forKey: totalCountKey)
+        label.text = "\(queueCount)/\(totalCount)"
     }
 
 }
