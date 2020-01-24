@@ -133,22 +133,39 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
             let group = DispatchGroup()
             group.enter()
             
-            var request = URLRequest(url: Secrets.url)
+            var request = URLRequest(url: Config.url)
             request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+            request.setValue(UIDevice.current.identifierForVendor!.uuidString, forHTTPHeaderField: "Auth")
             request.httpMethod = "POST"
             request.httpBody = try? JSONEncoder().encode(self.locationQueue)
-
+            
             let task = URLSession.shared.dataTask(with: request) { _, response, error in
                 if let error = error {
                     os_log("%{public}s: networkError: %{public}s", log: .updates, type: .error, #function, error.localizedDescription)
-                } else if let response = response as? HTTPURLResponse, response.statusCode == 200 {
-                    os_log("%{public}s: success", log: .updates, type: .info, #function)
+                    self.showNetworkError(message: error.localizedDescription)
+                } else if let response = response as? HTTPURLResponse {
+                    if response.statusCode == 200 {
+                        os_log("%{public}s: success", log: .updates, type: .info, #function)
+                        self.locationQueue = self.locationQueue.suffix(3)
+                    } else {
+                         os_log("%{public}s: networkStatusError: %{public}d", log: .updates, type: .error, #function, response.statusCode)
+                        self.showNetworkError(message: "status: \(response.statusCode)")
+                    }
                 }
-                self.locationQueue = self.locationQueue.suffix(2)
                 group.leave()
             }
             task.resume()
             group.wait()
+        }
+    }
+    
+    private func showNetworkError(message: String) {
+        DispatchQueue.main.async {
+            if let rootVC = UIApplication.shared.windows.first?.rootViewController {
+                let alert = UIAlertController(title: "network error", message: message, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "ok", style: .default, handler: nil))
+                rootVC.present(alert, animated: true, completion: nil)
+            }
         }
     }
     
@@ -158,7 +175,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate
         os_log("%{public}s: called", log: .updates, type: .info, #function)
         DispatchQueue.global().async {
             let request = BGAppRefreshTaskRequest(identifier: self.backgroundTaskIdentifier)
-            request.earliestBeginDate = Date(timeIntervalSinceNow: 60 * 10)
+            request.earliestBeginDate = Date(timeIntervalSinceNow: 60 * 30)
             do {
                 try BGTaskScheduler.shared.submit(request)
                 os_log("%{public}s: submitted", log: .updates, type: .info, #function)
