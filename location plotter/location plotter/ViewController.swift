@@ -37,11 +37,13 @@ class ViewController: UIViewController, MKMapViewDelegate {
         let dataRows = rows.dropFirst().dropLast()
         var points = [Point]()
         for row in Array(dataRows) {
-            let rowItems = row.replacingOccurrences(of: "\"", with: "").components(separatedBy: ",")
-            guard let rawTimestamp = Double(rowItems[0]) else {
+            let rowItems = row.replacingOccurrences(of: "\"", with: "")
+                .replacingOccurrences(of: "\r", with: "")
+                .components(separatedBy: ",")
+            guard let rawTimestamp = Double(rowItems[2]) else {
                 fatalError()
             }
-            guard let lat = CLLocationDegrees(rowItems[1]), let lon = CLLocationDegrees(rowItems[2]) else {
+            guard let lat = CLLocationDegrees(rowItems[1]), let lon = CLLocationDegrees(rowItems[3]) else {
                 fatalError()
             }
             let timestamp = Date(timeIntervalSince1970: rawTimestamp)
@@ -50,7 +52,9 @@ class ViewController: UIViewController, MKMapViewDelegate {
             points.append(point)
         }
 
-        let coords = points.map { $0.coordinate }
+        let coords = points.sorted(by: { lhs, rhs -> Bool in
+            return lhs.timestamp < rhs.timestamp
+        }).map { $0.coordinate }
         let polyline = MKPolyline(coordinates: coords, count: coords.count)
         mapView.addOverlay(polyline)
         mapView.region = MKCoordinateRegion(center: coords[0], span: MKCoordinateSpan(latitudeDelta: 0.025, longitudeDelta: 0.025))
